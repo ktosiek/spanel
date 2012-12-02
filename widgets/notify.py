@@ -52,7 +52,8 @@ class Notification(object):
         return ret
 
     def __repr__(self):
-        return u'<%s: %s>' % (self.__class__.__name__, unicode(self))
+        return u'<(%i) %s: %s>' % (self.n_id, self.__class__.__name__,
+                                   unicode(self))
 
 
 dbus_name = 'org.freedesktop.Notifications'
@@ -154,21 +155,35 @@ class NotificationsWidget(gtk.HBox, NotificationObserver):
     def notify(self, daemon, n_id):
         notif = daemon.notifications[n_id]
         print notif  # TODO: Remove me
-        notif_l = self.notifications.get(notif.app, [])
-        notif_l.append(notif)
-        if notif.app in self.notifications:
-            del self.notifications[notif.app]
-        self.notifications[notif.app] = notif_l
+        old_notif = self._get_notification_by_id(n_id)
+        if old_notif:
+            self.update_notification(old_notif, notif)
+        else:
+            self.add_notification(notif)
         with self._gdk_lock:
             self.refresh()
 
     def close(self, daemon, n_id):
         notif = self._get_notification_by_id(n_id)
+        self.remove_notification(notif)
+        with self._gdk_lock:
+            self.refresh()
+
+    def add_notification(self, notif):
+        notif_l = self.notifications.get(notif.app, [])
+        notif_l.append(notif)
+        if notif.app in self.notifications:
+            del self.notifications[notif.app]
+        self.notifications[notif.app] = notif_l
+
+    def remove_notification(self, notif):
         self.notifications[notif.app].remove(notif)
         if len(self.notifications[notif.app]) < 1:
             del self.notifications[notif.app]
-        with self._gdk_lock:
-            self.refresh()
+
+    def update_notification(self, old_notif, notif):
+        self.remove_notification(old_notif)
+        self.add_notification(notif)
 
     def refresh(self):
         for c in self.get_children():
@@ -182,7 +197,8 @@ class NotificationsWidget(gtk.HBox, NotificationObserver):
             icon = AppNotificationsIcon(notifs, expanded=(app==last_app))
             eventbox = gtk.EventBox()
             eventbox.add(icon)
-            eventbox.connect('button-press-event', self.notification_clicked, notifs[-1].n_id)
+            eventbox.connect('button-press-event', self.notification_clicked,
+                             notifs[-1].n_id)
             self.pack_end(eventbox, padding=5)
         self.show_all()
         self.queue_draw()
