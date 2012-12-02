@@ -34,6 +34,8 @@ class PanelWindow(gtk.Window):
         self._box.pack_start(gtk.HSeparator(), expand=True, fill=True)
 
         self._box.pack_start(NotificationsWidget(), expand=False)
+        self._box.pack_start(CommandWidget('acpi -b|sed "s/.*: //"', 5000),
+            expand=False, padding=5)
         self._box.pack_start(
             CommandWidget('cat /proc/loadavg | cut -d" " -f 1,2,3', 5000),
             expand=False, padding=5)
