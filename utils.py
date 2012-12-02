@@ -35,3 +35,16 @@ class Singleton(type):
         if cls.instance is None:
             cls.instance = super(Singleton, cls).__call__(*args, **kw)
         return cls.instance
+
+
+class Enum(object):
+    class EnumElem(object):
+        def __init__(self, name):
+            self.name = name
+
+        def __unicode__(self):
+            return self.name
+
+    def __init__(self, elems):
+        for e in elems:
+            setattr(self, e, Enum.EnumElem(e))
