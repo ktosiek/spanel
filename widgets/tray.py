@@ -40,6 +40,8 @@ class TrayWidget(gtk.EventBox):
             data = TrayWidget.parse_xevent_data(event.data, event.data_format)
             timestamp = data[0]
             opcode = data[1]
+            logger.debug("...with opcode %i (%s)", opcode,
+                         self.OpCode[opcode])
             if opcode == self.OpCode.REQUEST_DOCK:
                 icon_wid = data[2]
                 self.add_icon(timestamp, icon_wid)
@@ -57,8 +59,12 @@ class TrayWidget(gtk.EventBox):
             return True
 
     def add_icon(self, timestamp, icon_window_id):
-        # TODO
-        logger.debug("Icon %i", icon_window_id)
+        logger.debug("Icon 0x%x", icon_window_id)
+        socket = gtk.Socket()
+        self._box.add(socket)
+        socket.show()
+        socket.add_id(icon_window_id)
+        self.queue_draw()
 
     def receive_message(self, window, msg_len, msg_id, timeout):
         # TODO
