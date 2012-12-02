@@ -30,6 +30,9 @@ class PanelWindow(gtk.Window):
         self.add(self._box)
         self.setup_widgets(widgets)
         self.show_all()
+        for w, _ in widgets:  # TODO: create widget protocol
+            if hasattr(w, 'on_visible'):
+                w.on_visible()
         if position == Positions.TOP:
             self.move(0, 0)
             self.window.property_change("_NET_WM_STRUT", "CARDINAL", 32,

@@ -39,12 +39,13 @@ class Singleton(type):
 
 class Enum(object):
     class EnumElem(object):
-        def __init__(self, name):
+        def __init__(self, name, value):
             self.name = name
+            self.val = value
 
         def __unicode__(self):
             return self.name
 
     def __init__(self, elems):
-        for e in elems:
-            setattr(self, e, Enum.EnumElem(e))
+        for i, e in enumerate(elems):
+            setattr(self, e, Enum.EnumElem(e, i))
