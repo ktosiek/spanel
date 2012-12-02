@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import argparse
 import logging
 import sys
 import threading
@@ -53,6 +54,22 @@ class PanelWindow(gtk.Window):
 def main():
     logger.info('loading configuration')
     import conf
+
+    debug_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR']
+
+    parser = argparse.ArgumentParser(
+        description="Simple panel written in Python for holding widgets")
+    parser.add_argument('--verbosity', '-v', dest='verbosity',
+                        choices=debug_levels, default=None)
+
+    args = parser.parse_args()
+
+    level = args.verbosity or getattr(conf, 'VERBOSITY', 'INFO')
+    if level not in debug_levels:
+        logger.critical('Log level %s not supported!', level)
+        return 1
+    logging.basicConfig(level=level)
+
     logger.info('creating panel')
     app = PanelWindow(position=getattr(conf, 'POSITION', None),
                       widgets=getattr(conf, 'WIDGETS', []))
