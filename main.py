@@ -1,6 +1,8 @@
 #!/usr/bin/env python
+import logging
 import sys
 import threading
+
 import gtk
 import gobject
 import dbus
@@ -8,6 +10,10 @@ import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 
 from utils import Enum, GdkLock
+
+# setting DEBUG for pre-main initialization, it will be changed in main()
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 height = 16
 
@@ -45,9 +51,12 @@ class PanelWindow(gtk.Window):
 
 
 def main():
+    logger.info('loading configuration')
     import conf
+    logger.info('creating panel')
     app = PanelWindow(position=getattr(conf, 'POSITION', None),
                       widgets=getattr(conf, 'WIDGETS', []))
+    logger.info('starting main loop')
     gtk.gdk.threads_init()
     with GdkLock():
         gtk.main()

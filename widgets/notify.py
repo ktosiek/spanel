@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import logging
 import os
 
 import gtk
@@ -7,6 +8,9 @@ import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 
 from utils import GdkLock, Singleton
+
+
+logger = logging.getLogger(__name__)
 
 
 ICON_SIZE = 4
@@ -78,8 +82,7 @@ class NotificationDaemon(dbus.service.Object):
             try:
                 fun(l)
             except Exception:
-                import traceback
-                traceback.print_exc()
+                logger.exception('Problem with call to listener %s', repr(l))
 
 
     @dbus.service.method(dbus_name, out_signature='ssss')
@@ -122,7 +125,8 @@ class NotificationDaemon(dbus.service.Object):
             3 - The notification was closed by a call to CloseNotification.
             4 - Undefined/reserved reasons.
             """
-        print 'close', n_id, reason
+        logger.debug('Closing notification %s, reason %s',
+            self.notifications[n_id], reason)
         self.listeners_each(lambda l: l.close(self, n_id))
         del self.notifications[n_id]
 
@@ -154,7 +158,7 @@ class NotificationsWidget(gtk.HBox, NotificationObserver):
 
     def notify(self, daemon, n_id):
         notif = daemon.notifications[n_id]
-        print notif  # TODO: Remove me
+        logger.debug('Received notification %s', notif)
         old_notif = self._get_notification_by_id(n_id)
         if old_notif:
             self.update_notification(old_notif, notif)
@@ -165,6 +169,7 @@ class NotificationsWidget(gtk.HBox, NotificationObserver):
 
     def close(self, daemon, n_id):
         notif = self._get_notification_by_id(n_id)
+        logger.debug('Removing notification %s', notif)
         self.remove_notification(notif)
         with self._gdk_lock:
             self.refresh()
@@ -225,9 +230,10 @@ class AppNotificationsIcon(gtk.HBox):
 
     def prepare_notification_icon(self, notification):
         if 'image-data' in notification.hints:
-            print "TODO: image-data"
-            return gtk.Image()
-        elif notification.icon:
+            logger.warning("TODO: notification %s used image-data, ignoring",
+                           notification)
+
+        if notification.icon:
             if os.path.exists(notification.icon):
                 icon = gtk.Image()
                 pb = gtk.gdk.pixbuf_new_from_file_at_size(notification.icon,
