@@ -38,14 +38,31 @@ class Singleton(type):
 
 
 class Enum(object):
-    class EnumElem(object):
-        def __init__(self, name, value):
-            self.name = name
-            self.val = value
+    class EnumElem(int):
+        def __new__(cls, name, *args, **kwargs):
+            r = super(Enum.EnumElem, cls).__new__(cls, *args, **kwargs)
+            r.name = name
+            return r
 
         def __unicode__(self):
             return self.name
 
+        def __str__(self):
+            return self.name
+
+    def __getitem__(self, key):
+        return self._items[key]
+
     def __init__(self, elems):
+        self._items={}
         for i, e in enumerate(elems):
-            setattr(self, e, Enum.EnumElem(e, i))
+            elem = Enum.EnumElem(e, i)
+            self._items[i] = elem
+            self._items[e] = elem
+            setattr(self, e, elem)
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
