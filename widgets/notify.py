@@ -225,8 +225,10 @@ class AppNotificationsIcon(gtk.HBox):
         if notif_count > 1:
             self.pack_start(gtk.Label('({})'.format(notif_count)))
         if expanded:
-            self.pack_start(gtk.Label('{}: {}'.format(main_notif.summary,
-                main_notif.body)))
+            label = main_notif.summary
+            if main_notif.body:
+                label += ': {}'.format(main_notif.body)
+            self.pack_start(gtk.Label(label))
 
     def prepare_notification_icon(self, notification):
         if 'image-data' in notification.hints:
