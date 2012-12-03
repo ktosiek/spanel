@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 class TrayWidget(gtk.EventBox):
-
     _metaclass_ = Singleton
 
     OpCode = Enum((
@@ -61,22 +60,24 @@ class TrayWidget(gtk.EventBox):
     def add_icon(self, timestamp, icon_window_id):
         logger.debug("Icon 0x%x", icon_window_id)
         socket = gtk.Socket()
-        self._box.add(socket)
+        self._box.pack_end(socket, expand=False)
         socket.show()
+        socket.connect("plug-added", lambda s: s.set_size_request(16, 16))
+        socket.connect("plug-removed", lambda s: s.set_size_request(-1, -1))
         socket.add_id(icon_window_id)
         self.queue_draw()
 
     def receive_message(self, window, msg_len, msg_id, timeout):
         # TODO
-        logger.debug("Msg %i from %s", msg_id, window)
+        logger.warning("Msg %i from %s", msg_id, window)
 
     def continue_message(self, window, data):
         # TODO
-        logger.debug("Msg data from %s: '%s'", window, data)
+        logger.warning("Msg data from %s: '%s'", window, data)
 
     def cancel_message(self, window, msg_id):
         # TODO
-        logger.debug("Cancel msg %i from %s", msg_id, window)
+        logger.warning("Cancel msg %i from %s", msg_id, window)
 
     @staticmethod
     def parse_xevent_data(raw_data, data_format):
