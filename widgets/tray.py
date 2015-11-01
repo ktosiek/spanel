@@ -1,4 +1,4 @@
-# Copyright 2012 Tomasz Kontusz
+# Copyright 2012, 2015 Tomasz Kontusz
 #
 # This file is part of Spanel.
 #
@@ -76,11 +76,10 @@ class TrayWidget(gtk.EventBox):
 
     def add_icon(self, timestamp, icon_window_id):
         logger.debug("Icon 0x%x", icon_window_id)
-        socket = gtk.Socket()
+        socket = IconSocket()
+        logger.debug("...installed in socket %s", repr(socket))
         self._box.pack_end(socket, expand=False)
         socket.show()
-        socket.connect("plug-added", lambda s: s.set_size_request(16, 16))
-        socket.connect("plug-removed", lambda s: s.set_size_request(-1, -1))
         socket.add_id(icon_window_id)
         self.queue_draw()
 
@@ -108,3 +107,20 @@ class TrayWidget(gtk.EventBox):
             data[i/v_len] <<= v_len
             data[i/v_len] |= ord(c)
         return data
+
+
+class IconSocket(gtk.Socket):
+    def __init__(self):
+        super(IconSocket, self).__init__()
+        self.connect("plug-added", self._plug_added)
+        self.connect("plug-removed", self._plug_removed)
+
+    @staticmethod
+    def _plug_added(self):
+        logger.debug('%s: plug added', repr(self))
+        self.set_size_request(16, 16)
+
+    @staticmethod
+    def _plug_removed(self):
+        logger.debug('%s: plug removed', repr(self))
+        self.set_size_request(-1, -1)
